@@ -1,6 +1,7 @@
 # VL2D - VideoLecture2Document
+![VL2D framework](https://github.com/jwr0218/VL2D/assets/54136688/d1fb3fa4-97ea-43f7-b3cb-3bd0cdcd4501)
 
-{image}
+
 
 ### Dependency
 ```md 
