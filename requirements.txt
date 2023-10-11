@@ -17,15 +17,10 @@ dbus-python==1.2.16
 decorator==4.4.2
 executing==1.2.0
 filelock==3.12.2
-Flask==2.3.2
-Flask-Cors==4.0.0
 flatbuffers==2.0
 fonttools==4.42.0
 gast==0.4.0
 gensim==3.8.0
-google-auth==2.3.3
-google-auth-oauthlib==0.4.6
-google-pasta==0.2.0
 grpcio==1.41.1
 h5py==3.5.0
 idna==2.8
