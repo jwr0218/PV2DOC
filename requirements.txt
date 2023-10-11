@@ -78,8 +78,6 @@ Pygments==2.16.1
 pypandoc==1.11
 pyparsing==3.0.9
 pytesseract==0.3.10
-python-apt==2.0.0+ubuntu0.20.4.6
-python-dateutil==2.8.2
 pytz==2023.3
 PyWavelets==1.4.1
 PyYAML==6.0.1
