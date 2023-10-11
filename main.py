@@ -3,7 +3,6 @@
 from io import StringIO
 import os 
 import sys 
-from flask_cors import CORS
 import Utils
 
 file_name = sys.argv[1]
