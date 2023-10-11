@@ -4,7 +4,7 @@
 
 ### Environment ( Docker image ) 
 ```md
-docker pull tensorflow/tensorflow:2.7.4-gpu-jupyter
+docker pull tensorflow/tensorflow:2.7.0-gpu
 ```
 
 
