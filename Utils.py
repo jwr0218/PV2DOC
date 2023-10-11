@@ -388,9 +388,9 @@ def STT_summar(pre_dir , video_name):
     text = transcribe(audio_output_path)
     
     stt_text = gensim.summarization.summarize(text,ratio=0.3)
-    return stt_text
+    return stt_text , text
 
-def markdown(img_name,data,stt,imgCropped):
+def markdown(img_name,data,summary , stt ,imgCropped):
     #s3 = boto3.resource('s3')
     #bucket = s3.Bucket('capstone2021itm')
     image_dir = 'image/'+img_name+'/images'
@@ -475,7 +475,12 @@ def markdown(img_name,data,stt,imgCropped):
 
     mdFile.new_line("\pagebreak") 
     mdFile.new_header(level=1,title=img_name+' STT')
+    mdFile.new_header(level=2,title = "Summary : ")
+    mdFile.new_paragraph(text=summary)
+    mdFile.new_line("\pagebreak") 
+    mdFile.new_header(level=2,title = "STT : ")
     mdFile.new_paragraph(text=stt)
+    
     mdFile.create_md_file()
     
     output = pypandoc.convert_file('./'+file_name+'.md', 'pdf', outputfile='./'+file_name+".pdf")
@@ -487,8 +492,7 @@ def main_solution(model,pre_dir , file_name):
     imgDeleted,imgCropped,data = extract_from_video(model,pre_dir+file_name)
     
 
-    stt = STT_summar(pre_dir,file_name)
-    print('STT : ',stt)
-    print(type(stt))
+    summary, text = STT_summar(pre_dir,file_name)
+
     #stt = "testing / we are testing this system. Is this work?"
-    markdown(file_name,data,stt,imgCropped)
+    markdown(file_name,data,summary , text ,imgCropped)
