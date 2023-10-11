@@ -22,6 +22,7 @@ fonttools==4.42.0
 gast==0.4.0
 gensim==3.8.0
 grpcio==1.41.1
+tensorflow-gpu==2.7.0
 h5py==3.5.0
 idna==2.8
 imageio==2.31.1
