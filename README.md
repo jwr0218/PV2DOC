@@ -19,3 +19,8 @@ wget --load-cookies ~/cookies.txt "https://docs.google.com/uc?export=download&co
 ```md 
 python main.py [file_name]
 ```
+
+
+## Mask-RCNN Custom 
+
+### code 
