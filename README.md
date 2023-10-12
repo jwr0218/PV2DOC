@@ -10,14 +10,14 @@ docker pull tensorflow/tensorflow:2.7.0-gpu
 ### Environment
 ```md
 apt-get install list : 
-
-ffmpeg
-libgl1-mesa-glx
-libglib2.0-0
-pandoc
+ffmpeg=7:4.2.7-0ubuntu0.1
+libgl1-mesa-glx=21.2.6-0ubuntu0.1~20.04.2
+libglib2.0-0=2.64.6-1~ubuntu20.04.6
+lmodern=2.004.5-6
+pandoc=2.5-3build2
 python-dev
-tesseract-ocr
-
+tesseract-ocr=4.1.1-2build2
+texlive-xetex=2019.20200218-1
 ```
 
 
