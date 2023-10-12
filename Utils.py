@@ -41,7 +41,6 @@ from moviepy.editor import VideoFileClip
 from IPython.display import Audio
 import gensim
 
-model_whisper = whisper.load_model("base")
 
 CLASS_NAMES = ['BG', 'figure','formula']
 
@@ -60,7 +59,7 @@ def load_model():
     model1 = model.MaskRCNN(mode="inference",
                                     config=SimpleConfig(),
                                     model_dir=os.getcwd())
-    model1.load_weights(filepath="capstone_200_ppt.h5",
+    model1.load_weights(filepath="mask_custom.h5",
                        by_name=True)
     return model1
 
@@ -357,29 +356,10 @@ def make_Audio(pre_dir,video_name):
     audio_clip.close()
     return audio_output_path
 def transcribe(audio):
-    # load audio and pad/trim it to fit 30 seconds
-    # audio = whisper.load_audio(audio)
-    # audio = whisper.pad_or_trim(audio)
 
-    # # make log-Mel spectrogram and move to the same device as the model
-    # mel = whisper.log_mel_spectrogram(audio).to(model_whisper.device)
-
-    # # detect the spoken language
-    # _, probs = model_whisper.detect_language(mel)
-    # print(f"Detected language: {max(probs, key=probs.get)}")
-
-    # # decode the audio
-    # options = whisper.DecodingOptions()
-    # result = whisper.decode(model_whisper, mel, options)
-    # print(result)
     model = whisper.load_model('base')
     result = model.transcribe(audio)
 
-    # 영문으로 자동 변환을 하려면 task='translate' 추가
-    # model.transcribe('audio.mp3', task='translate')
-
-    
-    #return result.text
     return result['text']
 
 def STT_summar(pre_dir , video_name):
@@ -394,6 +374,7 @@ def markdown(img_name,data,summary , stt ,imgCropped):
     #s3 = boto3.resource('s3')
     #bucket = s3.Bucket('capstone2021itm')
     image_dir = 'image/'+img_name+'/images'
+    
     os.makedirs(image_dir, exist_ok=True)
     image_dir +='/'
     CAPITAL = 'QWERTYUIOPASDFGHJKLZXCVBNM0123456789'

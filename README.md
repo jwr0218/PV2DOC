@@ -7,7 +7,18 @@
 docker pull tensorflow/tensorflow:2.7.0-gpu
 ```
 
+### Environment
+```md
+apt-get install list : 
 
+ffmpeg
+libgl1-mesa-glx
+libglib2.0-0
+pandoc
+python-dev
+tesseract-ocr
+
+```
 
 
 ### Dependency
