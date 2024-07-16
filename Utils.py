@@ -28,10 +28,10 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 #from matplotlib import pyplot as plt
 from sklearn.metrics import silhouette_score
 #import gensim
-import mrcnn
-import mrcnn.config
+# import mrcnn
+# import mrcnn.config
 #import mrcnn.model as MD
-import mrcnn.visualize
+# import mrcnn.visualize
 import cv2
 import os
 import numpy
@@ -56,18 +56,18 @@ import torch
 
 
 
-class SimpleConfig(mrcnn.config.Config):
-    NAME = "coco_inference"
+# class SimpleConfig(mrcnn.config.Config):
+#     NAME = "coco_inference"
     
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
+#     GPU_COUNT = 1
+#     IMAGES_PER_GPU = 1
 
-    NUM_CLASSES = len(CLASS_NAMES)
+#     NUM_CLASSES = len(CLASS_NAMES)
 
 
 def load_model():
     # Load the YOLOv5 model
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5s_best.pt', force_reload=True)
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path='models/yolov5s_best.pt', force_reload=True)
     # Set the model to evaluation mode
     model.eval()
 
