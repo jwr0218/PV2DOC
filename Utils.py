@@ -7,7 +7,8 @@ Created on Tue Sep  7 14:07:24 2021
 import whisper
 
 from mdutils.mdutils import MdUtils
-import pypandoc
+# import pypandoc
+import aspose.words as aw
 from mdutils import Html
 import boto3
 import time
@@ -36,13 +37,22 @@ import os
 import numpy
 import numpy as np 
 from PIL import Image, ImageDraw
-from mrcnn import model
 from moviepy.editor import VideoFileClip
 from IPython.display import Audio
-import gensim
+import nltk
+nltk.download('punkt')
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
+
+
 
 
 CLASS_NAMES = ['BG', 'figure','formula']
+
+
+import torch 
+
 
 
 
@@ -56,67 +66,56 @@ class SimpleConfig(mrcnn.config.Config):
 
 
 def load_model():
-    model1 = model.MaskRCNN(mode="inference",
-                                    config=SimpleConfig(),
-                                    model_dir=os.getcwd())
-    model1.load_weights(filepath="mask_custom.h5",
-                       by_name=True)
-    return model1
+    # Load the YOLOv5 model
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5s_best.pt', force_reload=True)
+    # Set the model to evaluation mode
+    model.eval()
+
+    return model
 
 
-def merge_boxes(results_rois,results_masks):
-    #line = len(results_rois)
-    boxes = list()
+def merge_boxes(results_rois, image_size):
+    # Ensure results_rois is a numpy array
+    if isinstance(results_rois, torch.Tensor):
+        results_rois = results_rois.cpu().detach().numpy()
+
+    # Convert each ROI into a set of coordinates representing the corners of the box
+    boxes = []
     for box in results_rois:
-        ymin = box[0]
-        xmin = box[1]
-        ymax = box[2]
-        xmax = box[3]
-
-        coors = [[xmin, ymin],[xmax,ymin], [xmax, ymax],[xmin,ymax]]
-
+        ymin, xmin, ymax, xmax ,_,_= box
+        coors = np.array([[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]], dtype=np.int32)
         boxes.append(coors)
 
-    size = list(results_masks.shape[:2])
-    size.append(3)
-
-    stencil1 = numpy.zeros(size).astype(np.dtype("uint8"))
-    stencil2= numpy.zeros(size).astype(np.dtype("uint8"))
+    # Determine the size of the stencil based on the provided image size
+    stencil_size = [image_size[1], image_size[0], 3]
 
     color = [255, 255, 255]
 
     for i in range(len(boxes)):
-        stencil1 = numpy.zeros(size).astype(np.dtype("uint8"))
-
-        contours = [numpy.array(boxes[i])]
+        stencil1 = np.zeros(stencil_size, dtype=np.uint8)
+        contours = [boxes[i]]
         cv2.fillPoly(stencil1, contours, color)
 
-
-        for j in range(i+1,len(boxes)):
-            stencil2= numpy.zeros(size).astype(np.dtype("uint8"))
-            contours = [numpy.array(boxes[j])]
+        for j in range(i + 1, len(boxes)):
+            stencil2 = np.zeros(stencil_size, dtype=np.uint8)
+            contours = [boxes[j]]
             cv2.fillPoly(stencil2, contours, color)
 
+            intersection = np.sum(np.logical_and(stencil1, stencil2))
 
-            intersection = np.sum(numpy.logical_and(stencil1, stencil2))
-        
             if intersection > 0:
-                xmin = min(boxes[i][0][0],boxes[j][0][0])
-                ymin = min(boxes[i][0][1],boxes[j][0][1])
-                xmax = max(boxes[i][2][0],boxes[j][2][0])
-                ymax = max(boxes[i][2][1],boxes[j][2][1])
+                xmin = min(boxes[i][0][0], boxes[j][0][0])
+                ymin = min(boxes[i][0][1], boxes[j][0][1])
+                xmax = max(boxes[i][2][0], boxes[j][2][0])
+                ymax = max(boxes[i][2][1], boxes[j][2][1])
 
-                '''
-                coors = [[xmin, ymin],[xmax,ymin], [xmax, ymax],[xmin,ymax]]
-                '''
-                #print(" {},{} INTERSECTION : {}".format(i,j,np.sum(intersection)))
+                results_rois[i] = [ymin, xmin, ymax, xmax , -1,-1]
+                results_rois = np.delete(results_rois, j, 0)
 
-                results_rois[i] = [ymin,xmin,ymax,xmax]
-                arr = np.delete(results_rois,j,0)
-                
-                return merge_boxes(arr,results_masks)
+                return merge_boxes(results_rois, image_size)
 
     return results_rois
+
 
 
 def measureing(data, y_hap):
@@ -162,16 +161,19 @@ def extract_Figures(model,pil_image):
     image=np.array(pil_image)
     
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    r = model.detect([image], verbose=0)
-    r = r[0]
-    merged = merge_boxes(r['rois'],r['masks'])
+    # Perform inference
+    results = model(image)
+    bboxes = results.xyxy[0]  # Bounding boxes (x1, y1, x2, y2, confidence, class)
+    image_size = image.shape
+    merged = merge_boxes(bboxes,image_size)
     extract_imgs = list()
-    for i in merged:
+    for bbox in merged:
+        # print(bbox)
+        # print(bbox[0])
+        xmin, ymin, xmax, ymax ,_,_= bbox.astype(np.int16)
 
-        
         #  cropped_img = img[y: y + h, x: x + w]
-        cropped_img = image[i[0]:i[2], i[1]: i[3]]
+        cropped_img = image[ymin:ymax, xmin: xmax]
         extract_imgs.append(Image.fromarray(cropped_img))
     image = Image.fromarray(image)
     for i in merged:
@@ -192,6 +194,7 @@ def extract_from_video(model,video_dir):
 
     FPS = cap.get(cv2.CAP_PROP_FPS)
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    print(FPS , total )
     duration = total / FPS
 
     second = 1
@@ -362,13 +365,20 @@ def transcribe(audio):
 
     return result['text']
 
+
+
 def STT_summar(pre_dir , video_name):
     audio_output_path = make_Audio(pre_dir,video_name)
     #audio_dir = 'tmp_audio/'+video_name.split('.')[0]+'/' + video_name.split('.')[0]+'.wav'
     text = transcribe(audio_output_path)
-    
-    stt_text = gensim.summarization.summarize(text,ratio=0.3)
-    return stt_text , text
+    parser = PlaintextParser.from_string(text, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    ratio = 0.3
+    summary = summarizer(parser.document, int(len(text.split()) * ratio))
+    return " ".join(str(sentence) for sentence in summary) , text 
+
+    # stt_text = gensim.summarization.summarize(text,ratio=0.3)
+    # return stt_text , text
 
 def markdown(img_name,data,summary , stt ,imgCropped):
     #s3 = boto3.resource('s3')
@@ -424,9 +434,9 @@ def markdown(img_name,data,summary , stt ,imgCropped):
                     continue
                 else:
                     if i+1<len(data[data['slid_num']==j]['text']) and data[data['slid_num']==j]['cluster'][count+1]!=t[1]:
-                        lst.append(t+'\n')
+                        lst.append(str(t)+'\n')
             if t[1]==numCluster-2:
-                lst.append([t[0]]+'\n')
+                lst.append(str(t[0])+'\n')
         #print(lst)
         count += len(data[data['slid_num']==j]['text'])    
         
@@ -463,8 +473,9 @@ def markdown(img_name,data,summary , stt ,imgCropped):
     mdFile.new_paragraph(text=stt)
     
     mdFile.create_md_file()
-    
-    output = pypandoc.convert_file('./'+file_name+'.md', 'pdf', outputfile='./'+file_name+".pdf")
+    doc = aw.Document(f'./{file_name}.md')
+    doc.save(f'./{file_name}.pdf')
+    # output = pypandoc.convert_file('./'+file_name+'.md', 'pdf', outputfile='./'+file_name+".pdf")
 
 
 def main_solution(model,pre_dir , file_name):
