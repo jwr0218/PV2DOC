@@ -171,14 +171,17 @@ def extract_Figures(model,pil_image):
         # print(bbox)
         # print(bbox[0])
         xmin, ymin, xmax, ymax ,_,_= bbox.astype(np.int16)
-
+        
         #  cropped_img = img[y: y + h, x: x + w]
         cropped_img = image[ymin:ymax, xmin: xmax]
         extract_imgs.append(Image.fromarray(cropped_img))
     image = Image.fromarray(image)
-    for i in merged:
+    for bbox in merged:
         #print(i)
-        shape = [(i[1], i[0]), (i[3],i[2])]
+        xmin, ymin, xmax, ymax ,_,_= bbox.astype(np.int16)
+        start_point = (int(xmin), int(ymin))
+        end_point = (int(xmax), int(ymax))
+        shape = [start_point, end_point]
         
         img1 = ImageDraw.Draw(image)
         img1.rectangle(shape, fill ="#FFFFFF")
