@@ -3,9 +3,17 @@
 from io import StringIO
 import os 
 import sys 
-import Utils
 
-file_name = sys.argv[1]
+file_name = sys.argv[2]
+detect_version = sys.argv[1]
+
+if detect_version == 'yolo':
+    import yoloUtils as Utils
+elif detect_version == 'mrcnn':
+    import mrcnnUtils as Utils
+else:
+    print('wrong type')
+    exit()
 
 pre_dir = "./"
 stt = 'test'

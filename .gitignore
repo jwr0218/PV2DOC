@@ -1,1 +1,5 @@
 models/
+__pycache__/
+tmp_audio/
+image/
+Understanding*
